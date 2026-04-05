@@ -69,14 +69,19 @@
         .view-section { display: none; padding-bottom: 90px; position: relative; min-height: 100vh;}
         .view-section.active { display: block; animation: slideIn 0.3s ease-out; }
 
-        /* Mencegah scroll pada halaman Login dan Register */
-        #view-login, #view-register { 
+        /* Mencegah scroll pada halaman Login */
+        #view-login { 
             padding-bottom: 0; 
             height: 100vh; 
             overflow: hidden; 
         }
 
-        /* Purple Header Background for App Views */
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Blue Header Background for App Views */
         .purple-header-bg {
             position: absolute;
             top: 0; left: 0; right: 0;
@@ -187,7 +192,7 @@
         .fab:active { transform: rotate(45deg) scale(0.9); }
 
         /* --- Modals --- */
-        .overlay { position: absolute; inset: 0; background: rgba(26, 20, 35, 0.6); z-index: 200; display: none; align-items: flex-end; backdrop-filter: blur(4px); }
+        .overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 200; display: none; align-items: flex-end; backdrop-filter: blur(4px); }
         .overlay.active { display: flex; }
         .modal { 
             background: var(--surface-color); width: 100%; padding: 30px 24px; 
@@ -209,164 +214,132 @@
     <!-- LOADER -->
     <div id="loader" class="loader-box">
         <div class="spinner"></div>
-        <p style="margin-top: 15px; font-size: 14px; color: var(--text-muted)" id="loader-msg">Memuat...</p>
+        <p style="margin-top: 15px; font-size: 14px; font-weight: 700; color: var(--text-muted)" id="loader-msg">Memuat...</p>
     </div>
 
     <!-- NOTIFICATION BOX -->
     <div id="notif-overlay" class="overlay" style="align-items: center; justify-content: center; z-index: 1000;">
-        <div class="modal" style="width: 85%; max-width: 320px; border-radius: 20px; text-align: center;">
-            <div id="notif-icon" style="font-size: 44px; color: var(--success); margin-bottom: 12px;"><i class="ph-fill ph-check-circle"></i></div>
-            <h3 id="notif-title" style="margin-bottom: 8px;">Info</h3>
-            <p id="notif-msg" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;"></p>
+        <div class="modal" style="width: 85%; max-width: 320px; border-radius: 24px; text-align: center;">
+            <div id="notif-icon" style="font-size: 50px; color: var(--success); margin-bottom: 16px;"><i class="ph-fill ph-check-circle"></i></div>
+            <h3 id="notif-title" style="margin-bottom: 8px; font-weight: 800;">Info</h3>
+            <p id="notif-msg" style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 24px;"></p>
             <button class="btn-primary" onclick="closeNotif()">Tutup</button>
         </div>
     </div>
 
     <!-- VIEW: LOGIN -->
-<div id="view-login" class="view-section active">
-    <div style="height: 100vh; display: flex; align-items: center; padding: 24px; background: var(--primary-gradient); color: white;">
-        <div class="login-card" style="padding: 40px 24px; border-radius: var(--radius-lg); width: 100%; text-align: center;">
-            <div style="background: white; width: 85px; height: 85px; border-radius: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: rotate(10deg);">
-                <i class="ph-fill ph-wallet" style="font-size: 45px; color: var(--primary); transform: rotate(-10deg);"></i>
+    <div id="view-login" class="view-section active">
+        <div style="height: 100vh; display: flex; align-items: center; padding: 24px; background: var(--primary-gradient); color: white;">
+            <div class="login-card" style="padding: 40px 24px; border-radius: var(--radius-lg); width: 100%; text-align: center;">
+                <div style="background: white; width: 85px; height: 85px; border-radius: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: rotate(10deg);">
+                    <i class="ph-fill ph-wallet" style="font-size: 45px; color: var(--primary); transform: rotate(-10deg);"></i>
+                </div>
+                <h2 style="font-weight: 800; font-size: 32px; margin-bottom: 8px;">Welcome!</h2>
+                <p style="font-size: 15px; opacity: 0.9; margin-bottom: 50px;">Log in to your account</p>
+                
+                <div class="input-group" style="text-align: left;">
+                    <input type="text" id="login-user" placeholder="Username" class="login-input">
+                </div>
+                <div class="input-group" style="text-align: left; margin-bottom: 40px;">
+                    <input type="password" id="login-pass" placeholder="Password" class="login-input">
+                </div>
+                <button class="btn-login" onclick="doLogin()">Log In</button>
             </div>
-            <h2 style="font-weight: 800; font-size: 32px; margin-bottom: 8px;">Welcome!</h2>
-            <p style="font-size: 15px; opacity: 0.9; margin-bottom: 50px;">Log in to your account</p>
-            
-            <div class="input-group" style="text-align: left;">
-                <input type="text" id="login-user" placeholder="Username" class="login-input">
-            </div>
-            <div class="input-group" style="text-align: left; margin-bottom: 40px;">
-                <input type="password" id="login-pass" placeholder="Password" class="login-input">
-            </div>
-            <button class="btn-login" onclick="doLogin()">Log In</button>
-            <p style="margin-top: 30px; font-size: 14px; opacity: 0.9;">Don't have an account? <span onclick="navTo('view-register')" style="font-weight: 800; cursor: pointer; text-decoration: underline;">Create</span></p>
         </div>
     </div>
-</div>
 
-<!-- VIEW: REGISTER (NEW) -->
-<div id="view-register" class="view-section">
-    <div style="height: 100vh; display: flex; align-items: center; padding: 24px; background: var(--primary-gradient); color: white; position: relative;">
+    <!-- VIEW: DASHBOARD -->
+    <div id="view-dashboard" class="view-section">
+        <div class="purple-header-bg"></div>
+        <header class="header">
+            <div class="user-meta">
+                <div class="avatar"><i class="ph-fill ph-smiley"></i></div>
+                <div class="greeting">
+                    <p id="greet-txt">Selamat Datang,</p>
+                    <h3 id="user-display">User</h3>
+                </div>
+            </div>
+            <button onclick="toggleTheme()" style="background:none; border:none; color:white; font-size: 26px; cursor: pointer;"><i class="ph-fill ph-moon" id="theme-icon"></i></button>
+        </header>
+
+        <div class="card-main">
+            <p class="label">Kekayaan Bersih</p>
+            <h1 class="balance" id="val-net">Rp 0</h1>
+            <div class="card-stats">
+                <div class="stat-box"><p>Pemasukan</p><h4 style="color: var(--success);"><i class="ph-bold ph-arrow-down-left"></i> <span id="val-total-in">0</span></h4></div>
+                <div class="stat-box" style="text-align: right;"><p>Pengeluaran</p><h4 style="justify-content: flex-end; color: var(--danger);"><span id="val-total-out">0</span> <i class="ph-bold ph-arrow-up-right"></i></h4></div>
+            </div>
+        </div>
+
+        <div class="grid-summary">
+            <div class="box-summary"><p>Hari Ini</p><h3 id="val-day-out" style="color: var(--danger);">Rp 0</h3></div>
+            <div class="box-summary highlight"><p>Estimasi Sisa</p><h3 id="val-budget">Rp 0</h3></div>
+        </div>
+
+        <div class="list-container">
+            <div class="list-header">Tren 7 Hari Terakhir</div>
+            <div style="height: 180px;"><canvas id="chartTrend"></canvas></div>
+        </div>
+
+        <div class="list-container">
+            <div class="list-header">Top Kategori (Bulan Ini)</div>
+            <div id="dist-list"></div>
+        </div>
+    </div>
+
+    <!-- VIEW: HISTORY -->
+    <div id="view-history" class="view-section">
+        <div class="purple-header-bg" style="height: 140px;"></div>
+        <header class="header"><h3>Riwayat Transaksi</h3></header>
+        <div id="tx-history-list" style="padding: 0 24px; position: relative; z-index: 1;"></div>
+    </div>
+
+    <!-- VIEW: REPORT -->
+    <div id="view-report" class="view-section">
+        <div class="purple-header-bg" style="height: 140px;"></div>
+        <header class="header"><h3>Laporan Keuangan</h3></header>
+        <div style="padding: 0 24px 16px; position: relative; z-index: 1;">
+            <input type="month" id="report-picker" onchange="fetchReport()" style="width:100%; padding: 14px; border-radius: var(--radius-md); border: none; background: var(--surface-color); color: var(--text-main); font-weight: 700; box-shadow: var(--shadow-sm);">
+        </div>
         
-        <!-- Tombol Kembali -->
-        <button onclick="navTo('view-login')" style="position: absolute; top: 30px; left: 24px; background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(5px); box-shadow: var(--shadow-sm); z-index: 10;">
-            <i class="ph-bold ph-arrow-left" style="font-size: 24px;"></i>
-        </button>
-
-        <div class="login-card" style="padding: 40px 24px; border-radius: var(--radius-lg); width: 100%; text-align: center;">
-            <div style="background: white; width: 85px; height: 85px; border-radius: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: rotate(-10deg);">
-                <i class="ph-fill ph-user-plus" style="font-size: 45px; color: var(--primary); transform: rotate(10deg);"></i>
-            </div>
-            <h2 style="font-weight: 800; font-size: 32px; margin-bottom: 8px;">Create Account</h2>
-            <p style="font-size: 15px; opacity: 0.9; margin-bottom: 40px;">Bergabunglah bersama kami</p>
-            
-            <div class="input-group" style="text-align: left;">
-                <input type="text" id="reg-user" placeholder="Username" class="login-input">
-            </div>
-            <div class="input-group" style="text-align: left;">
-                <input type="password" id="reg-pass" placeholder="Password" class="login-input">
-            </div>
-            <div class="input-group" style="text-align: left; margin-bottom: 40px;">
-                <input type="password" id="reg-pass-confirm" placeholder="Confirm Password" class="login-input">
-            </div>
-            <button class="btn-login" onclick="doRegister()">Sign Up</button>
-            <p style="margin-top: 30px; font-size: 14px; opacity: 0.9;">Already have an account? <span onclick="navTo('view-login')" style="font-weight: 800; cursor: pointer; text-decoration: underline;">Log In</span></p>
+        <div class="grid-summary">
+            <div class="box-summary" style="border-left: 4px solid var(--success);"><p>Masuk</p><h3 id="rep-in" style="color: var(--success);">Rp 0</h3></div>
+            <div class="box-summary" style="border-left: 4px solid var(--danger);"><p>Keluar</p><h3 id="rep-out" style="color: var(--danger);">Rp 0</h3></div>
         </div>
-    </div>
-</div>
 
-<!-- VIEW: DASHBOARD -->
-<div id="view-dashboard" class="view-section">
-    <div class="purple-header-bg"></div>
-    <header class="header">
-        <div class="user-meta">
-            <div class="avatar"><i class="ph-fill ph-smiley"></i></div>
-            <div class="greeting">
-                <p id="greet-txt">Selamat Datang,</p>
-                <h3 id="user-display">User</h3>
+        <div class="list-container">
+            <div class="list-header">Analisis Pengeluaran</div>
+            <div style="height: 280px; position: relative; margin-bottom: 20px;">
+                <canvas id="chartReport"></canvas>
+                <div id="no-report-data" style="position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px; font-weight: 700;">Tidak ada pengeluaran di bulan ini</div>
             </div>
-        </div>
-        <button onclick="toggleTheme()" style="background:none; border:none; color:white; font-size: 26px; cursor: pointer;"><i class="ph-fill ph-moon" id="theme-icon"></i></button>
-    </header>
-
-    <div class="card-main">
-        <p class="label">Kekayaan Bersih</p>
-        <h1 class="balance" id="val-net">Rp 0</h1>
-        <div class="card-stats">
-            <div class="stat-box"><p>Pemasukan</p><h4 style="color: var(--success);"><i class="ph-bold ph-arrow-down-left"></i> <span id="val-total-in">0</span></h4></div>
-            <div class="stat-box" style="text-align: right;"><p>Pengeluaran</p><h4 style="justify-content: flex-end; color: var(--danger);"><span id="val-total-out">0</span> <i class="ph-bold ph-arrow-up-right"></i></h4></div>
+            <!-- BUTTON DOWNLOAD -->
+            <button class="btn-outline" onclick="downloadReportCSV()" id="btn-download" style="margin-top: 10px;">
+                <i class="ph-bold ph-download-simple"></i> Unduh Data (.csv)
+            </button>
         </div>
     </div>
 
-    <div class="grid-summary">
-        <div class="box-summary"><p>Hari Ini</p><h3 id="val-day-out" style="color: var(--danger);">Rp 0</h3></div>
-        <div class="box-summary highlight"><p>Estimasi Sisa</p><h3 id="val-budget">Rp 0</h3></div>
-    </div>
-
-    <div class="list-container">
-        <div class="list-header">Tren 7 Hari Terakhir</div>
-        <div style="height: 180px;"><canvas id="chartTrend"></canvas></div>
-    </div>
-
-    <div class="list-container">
-        <div class="list-header">Top Kategori (Bulan Ini)</div>
-        <div id="dist-list"></div>
-    </div>
-</div>
-
-<!-- VIEW: HISTORY -->
-<div id="view-history" class="view-section">
-    <div class="purple-header-bg" style="height: 140px;"></div>
-    <header class="header"><h3>Riwayat Transaksi</h3></header>
-    <div id="tx-history-list" style="padding: 0 24px; position: relative; z-index: 1;"></div>
-</div>
-
-<!-- VIEW: REPORT -->
-<div id="view-report" class="view-section">
-    <div class="purple-header-bg" style="height: 140px;"></div>
-    <header class="header"><h3>Laporan Keuangan</h3></header>
-    <div style="padding: 0 24px 16px; position: relative; z-index: 1;">
-        <input type="month" id="report-picker" onchange="fetchReport()" style="width:100%; padding: 14px; border-radius: var(--radius-md); border: none; background: var(--surface-color); color: var(--text-main); font-weight: 700; box-shadow: var(--shadow-sm);">
-    </div>
-    
-    <div class="grid-summary">
-        <div class="box-summary" style="border-left: 4px solid var(--success);"><p>Masuk</p><h3 id="rep-in" style="color: var(--success);">Rp 0</h3></div>
-        <div class="box-summary" style="border-left: 4px solid var(--danger);"><p>Keluar</p><h3 id="rep-out" style="color: var(--danger);">Rp 0</h3></div>
-    </div>
-
-    <div class="list-container">
-        <div class="list-header">Analisis Pengeluaran</div>
-        <div style="height: 280px; position: relative; margin-bottom: 20px;">
-            <canvas id="chartReport"></canvas>
-            <div id="no-report-data" style="position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px;">Tidak ada pengeluaran di bulan ini</div>
-        </div>
-        <!-- BUTTON DOWNLOAD -->
-        <button class="btn-outline" onclick="downloadReportCSV()" id="btn-download" style="margin-top: 10px;">
-            <i class="ph-bold ph-download-simple"></i> Unduh Data (.csv)
-        </button>
-    </div>
-</div>
-
-<!-- NAV BAR -->
+    <!-- NAV BAR -->
     <nav class="nav-bar" id="app-nav" style="display: none;">
-        <div class="nav-item active" onclick="navTo('view-dashboard', this)"><i class="ph ph-house"></i><span>Beranda</span></div>
-        <div class="nav-item" onclick="navTo('view-history', this)"><i class="ph ph-receipt"></i><span>Riwayat</span></div>
-        <div class="fab" onclick="toggleModal(true)"><i class="ph ph-plus"></i></div>
-        <div class="nav-item" onclick="navTo('view-report', this)"><i class="ph ph-chart-bar"></i><span>Laporan</span></div>
-        <div class="nav-item" onclick="doLogout()"><i class="ph ph-sign-out"></i><span>Keluar</span></div>
+        <div class="nav-item active" onclick="navTo('view-dashboard', this)"><i class="ph-fill ph-house"></i><span>Beranda</span></div>
+        <div class="nav-item" onclick="navTo('view-history', this)"><i class="ph-fill ph-receipt"></i><span>Riwayat</span></div>
+        <div class="fab" onclick="toggleModal(true)"><i class="ph-bold ph-plus"></i></div>
+        <div class="nav-item" onclick="navTo('view-report', this)"><i class="ph-fill ph-chart-bar"></i><span>Laporan</span></div>
+        <div class="nav-item" onclick="doLogout()"><i class="ph-fill ph-sign-out"></i><span>Keluar</span></div>
     </nav>
 
     <!-- MODAL: FORM TX -->
     <div id="modal-tx" class="overlay">
         <div class="modal">
             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                <h3 id="modal-title">Tambah Transaksi</h3>
-                <i class="ph ph-x" onclick="toggleModal(false)" style="font-size: 24px; cursor:pointer;"></i>
+                <h3 id="modal-title" style="font-weight: 800;">Tambah Transaksi</h3>
+                <i class="ph-bold ph-x" onclick="toggleModal(false)" style="font-size: 24px; cursor:pointer;"></i>
             </div>
             <form id="tx-form" onsubmit="saveTx(event)">
                 <div class="input-group"><label>Tanggal</label><input type="date" id="f-date" required></div>
                 <div class="input-group"><label>Tipe</label><select id="f-type" onchange="syncCats()"><option value="Keluar">Pengeluaran (-)</option><option value="Masuk">Pemasukan (+)</option></select></div>
-                <div class="input-group"><label>Nominal (Rp)</label><input type="number" id="f-amount" placeholder="50.000" required></div>
+                <div class="input-group"><label>Nominal (Rp)</label><input type="text" inputmode="numeric" id="f-amount" placeholder="Contoh: 300.000" onkeyup="formatRibuan(this)" required></div>
                 <div class="input-group"><label>Kategori</label><select id="f-cat" required></select></div>
                 <div class="input-group"><label>Catatan</label><input type="text" id="f-note" placeholder="Beli apa?"></div>
                 <button type="submit" class="btn-primary" id="btn-save">Simpan Transaksi</button>
@@ -378,7 +351,7 @@
 
 <script>
     // GANTI URL DI BAWAH INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA
-    const API_URL = "https://script.google.com/macros/s/AKfycbyCGmCoYYWTvaJVpSmq1NAmRjb1RIcVpWYRMeClLq2JVLVXoyid60kKqrTcFh0EFKIEbg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw6sGT8R8q8SGGlkMFL4-huZrbYKyyrkVNCI4AWJLKFKPrp6t_I_KGzfutoGdQTf1TkYA/exec";
     
     let state = {
         user: localStorage.getItem('user_id') || null,
@@ -389,7 +362,6 @@
     };
 
     const fmtRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
-    const fmtShort = (v) => v >= 1000000 ? (v/1000000).toFixed(1) + 'jt' : (v >= 1000 ? (v/1000).toFixed(0) + 'rb' : v);
 
     function showLoading(msg = "Memuat...") {
         document.getElementById('loader-msg').innerText = msg;
@@ -447,7 +419,7 @@
 
     function applyTheme() {
         document.body.setAttribute('data-theme', state.theme);
-        document.getElementById('theme-icon').className = state.theme === 'dark' ? 'ph ph-sun' : 'ph ph-moon';
+        document.getElementById('theme-icon').className = state.theme === 'dark' ? 'ph-fill ph-sun' : 'ph-fill ph-moon';
     }
 
     function toggleTheme() {
@@ -478,31 +450,6 @@
         }
     }
 
-    // REGISTRASI USER
-    async function doRegister() {
-        const u = document.getElementById('reg-user').value;
-        const p = document.getElementById('reg-pass').value;
-        const p2 = document.getElementById('reg-pass-confirm').value;
-
-        if(!u || !p || !p2) return notify("Opps", "Semua kolom wajib diisi", "error");
-        if(p !== p2) return notify("Opps", "Password tidak cocok!", "error");
-        if(p.length < 6) return notify("Opps", "Password minimal 6 karakter", "error");
-
-        showLoading("Membuat akun...");
-        const data = { user: u, pass: p };
-        const res = await api('register', { data }, 'POST');
-        
-        hideLoading();
-        if (res.success) {
-            notify("Berhasil", "Akun dibuat! Silakan login.");
-            document.getElementById('login-user').value = u;
-            document.getElementById('login-pass').value = '';
-            navTo('view-login');
-        } else {
-            notify("Gagal", res.message || "Username sudah terdaftar.", "error");
-        }
-    }
-
     function doLogout() {
         localStorage.removeItem('user_id');
         location.reload();
@@ -524,14 +471,14 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
         }
-        document.getElementById('app-nav').style.display = (viewId === 'view-login' || viewId === 'view-register') ? 'none' : 'flex';
+        document.getElementById('app-nav').style.display = (viewId === 'view-login') ? 'none' : 'flex';
         if (viewId === 'view-report') fetchReport();
     }
 
     function renderDashboard(data) {
         document.getElementById('val-net').innerText = fmtRp(data.saldoBersih);
-        document.getElementById('val-total-in').innerText = fmtShort(data.totalMasuk);
-        document.getElementById('val-total-out').innerText = fmtShort(data.totalKeluar);
+        document.getElementById('val-total-in').innerText = fmtRp(data.totalMasuk);
+        document.getElementById('val-total-out').innerText = fmtRp(data.totalKeluar);
         document.getElementById('val-day-out').innerText = fmtRp(data.keluarHariIni);
         document.getElementById('val-budget').innerText = fmtRp(data.saldoBersih * 0.4);
         renderTrendChart(data.chartData.keluar, data.chartData.labels);
@@ -545,7 +492,7 @@
         state.charts.trend = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets: [{ data: dataPoints, borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 2 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: state.theme === 'dark' ? '#94A3B8' : '#64748B' } } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' }, color: state.theme === 'dark' ? '#94A3B8' : '#64748B' } } } }
         });
     }
 
@@ -553,26 +500,26 @@
         const container = document.getElementById('dist-list');
         container.innerHTML = '';
         const entries = Object.entries(dist).sort((a,b) => b[1] - a[1]);
-        if(entries.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">Belum ada pengeluaran</p>`; return; }
+        if(entries.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 20px;">Belum ada pengeluaran</p>`; return; }
         entries.slice(0, 4).forEach(([name, val]) => {
-            container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; border-radius:10px; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center;"><i class="ph ph-tag"></i></div><span style="font-size:14px; font-weight:500;">${name}</span></div><span style="font-weight:700;">${fmtRp(val)}</span></div>`;
+            container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:12px;"><div style="width:38px; height:38px; border-radius:12px; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center;"><i class="ph-bold ph-tag"></i></div><span style="font-size:14px; font-weight:700;">${name}</span></div><span style="font-weight:800;">${fmtRp(val)}</span></div>`;
         });
     }
 
     function renderHistory(txs) {
         const container = document.getElementById('tx-history-list');
         container.innerHTML = '';
-        if(txs.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 14px; padding-top: 40px;">Riwayat kosong</p>`; return; }
+        if(txs.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 14px; font-weight: 600; padding-top: 40px;">Riwayat kosong</p>`; return; }
         txs.forEach(tx => {
             const isIn = tx.tipe === 'Masuk';
-            container.innerHTML += `<div class="box-summary" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; align-items: center; gap: 12px;"><div style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: ${isIn ? 'var(--success-soft)' : 'var(--danger-soft)'}; color: ${isIn ? 'var(--success)' : 'var(--danger)'}"><i class="ph ${isIn ? 'ph-arrow-circle-down' : 'ph-shopping-cart'}"></i></div><div><div style="font-weight: 600; font-size: 14px;">${tx.kategori}</div><div style="font-size: 11px; color: var(--text-muted);">${tx.tanggal} ${tx.catatan ? '• '+tx.catatan : ''}</div></div></div><div style="font-weight: 700; color: ${isIn ? 'var(--success)' : 'var(--text-main)'}">${isIn ? '+' : '-'}${fmtRp(tx.jumlah)}</div></div>`;
+            container.innerHTML += `<div class="box-summary" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; align-items: center; gap: 14px;"><div style="width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; background: ${isIn ? 'var(--success-soft)' : 'var(--danger-soft)'}; color: ${isIn ? 'var(--success)' : 'var(--danger)'}"><i class="ph-bold ${isIn ? 'ph-arrow-down-left' : 'ph-shopping-cart'}"></i></div><div><div style="font-weight: 800; font-size: 15px;">${tx.kategori}</div><div style="font-size: 12px; font-weight: 600; color: var(--text-muted);">${tx.tanggal} ${tx.catatan ? '• '+tx.catatan : ''}</div></div></div><div style="font-weight: 800; color: ${isIn ? 'var(--success)' : 'var(--text-main)'}">${isIn ? '+' : '-'}${fmtRp(tx.jumlah)}</div></div>`;
         });
     }
 
     async function fetchReport() {
         const m = document.getElementById('report-picker').value;
         showLoading("Menganalisa...");
-        const res = await api('getReportData', { month: m, user: state.user }); // <-- UPDATE: Mengirim user state untuk filter laporan
+        const res = await api('getReportData', { month: m, user: state.user }); 
         hideLoading();
         if(res.success) {
             state.reportData = res.data;
@@ -603,7 +550,7 @@
                 labels: labels,
                 datasets: [{
                     data: values,
-                    backgroundColor: ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
+                    backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
                     borderRadius: 8,
                     barThickness: 24,
                 }]
@@ -627,8 +574,8 @@
                         grid: { display: false },
                         border: { display: false },
                         ticks: {
-                            color: state.theme === 'dark' ? '#F1F5F9' : '#0F172A',
-                            font: { size: 12, weight: '500' }
+                            color: state.theme === 'dark' ? '#F8FAFC' : '#334155',
+                            font: { size: 12, weight: '700' }
                         }
                     }
                 }
@@ -667,6 +614,16 @@
 
     function toggleModal(show) { document.getElementById('modal-tx').classList.toggle('active', show); if(!show) document.getElementById('tx-form').reset(); }
 
+    // Fungsi otomatis menambah format titik saat mengetik nominal
+    function formatRibuan(input) {
+        let val = input.value.replace(/\D/g, '');
+        if (val) {
+            input.value = new Intl.NumberFormat('id-ID').format(val);
+        } else {
+            input.value = '';
+        }
+    }
+
     function syncCats() {
         const type = document.getElementById('f-type').value;
         const sel = document.getElementById('f-cat');
@@ -679,7 +636,13 @@
     async function saveTx(e) {
         e.preventDefault();
         const btn = document.getElementById('btn-save');
-        const data = { tanggal: document.getElementById('f-date').value, tipe: document.getElementById('f-type').value, jumlah: document.getElementById('f-amount').value, kategori: document.getElementById('f-cat').value, catatan: document.getElementById('f-note').value, user: state.user };
+        
+        // Membersihkan format titik/koma agar menjadi angka murni sebelum disimpan ke database
+        const rawAmount = document.getElementById('f-amount').value;
+        const cleanAmount = rawAmount.replace(/\D/g, '');
+
+        const data = { tanggal: document.getElementById('f-date').value, tipe: document.getElementById('f-type').value, jumlah: cleanAmount, kategori: document.getElementById('f-cat').value, catatan: document.getElementById('f-note').value, user: state.user };
+        
         btn.disabled = true; btn.innerText = "Mengirim...";
         showLoading("Menyimpan...");
         const res = await api('addTransaction', { data }, 'POST');
@@ -694,7 +657,7 @@
         }
     }
 
-    // FUNGSI MOCK API DIPERBARUI UNTUK SIMULASI LOGIN
+    // FUNGSI MOCK API UNTUK SIMULASI LOGIN (JIKA GOOGLE APPS SCRIPT OFFLINE)
     function mockApi(action, params) {
         return new Promise(res => {
             setTimeout(() => {
@@ -703,7 +666,7 @@
                     if(req.user === 'admin' && req.pass === 'admin123') {
                         res({ success: true });
                     } else {
-                        res({ success: false, message: 'Simulasi Offline: Coba admin & admin123' });
+                        res({ success: false, message: 'Simulasi Offline: Gunakan admin & admin123' });
                     }
                 }
                 if(action === 'getCategories') res({ success: true, data: { masuk: ['Gaji', 'Bonus', 'Transfer'], keluar: ['Makan', 'Transport', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan'] } });
@@ -722,11 +685,6 @@
                     });
                 }
                 if(action === 'addTransaction') res({ success: true });
-                if(action === 'register') {
-                    const requestData = JSON.parse(params.data || '{}');
-                    if(requestData.user === 'admin') res({ success: false, message: 'Username "admin" sudah terdaftar' });
-                    else res({ success: true });
-                }
             }, 400);
         });
     }

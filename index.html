@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KeuanganKu - Smart Dashboard</title>
+    
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --surface-color: #FFFFFF;
+            --text-main: #334155;
+            --text-muted: #94A3B8;
+            --primary: #3B82F6;
+            --primary-gradient: linear-gradient(135deg, #60A5FA, #2563EB);
+            --primary-soft: #EFF6FF;
+            --success: #10B981;
+            --success-soft: #D1FAE5;
+            --danger: #EF4444;
+            --danger-soft: #FEE2E2;
+            --border: #F1F5F9;
+            --shadow-sm: 0 4px 15px rgba(37, 99, 235, 0.08);
+            --shadow-md: 0 10px 25px rgba(37, 99, 235, 0.15);
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-pill: 50px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0F172A;
+            --surface-color: #1E293B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --primary: #60A5FA;
+            --primary-gradient: linear-gradient(135deg, #3B82F6, #1E40AF);
+            --primary-soft: #1E3A8A;
+            --border: #334155;
+            --shadow-sm: 0 4px 15px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Nunito', -apple-system, sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 40px rgba(0,0,0,0.05);
+            overflow-x: hidden;
+        }
+
+        .view-section { display: none; padding-bottom: 90px; position: relative; min-height: 100vh;}
+        .view-section.active { display: block; animation: slideIn 0.3s ease-out; }
+
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Purple Header Background for App Views */
+        .purple-header-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 280px;
+            background: var(--primary-gradient);
+            border-bottom-left-radius: 45px;
+            border-bottom-right-radius: 45px;
+            z-index: 0;
+        }
+        .purple-header-bg::after {
+            content: ''; position: absolute;
+            top: 20px; right: -20px; width: 150px; height: 150px;
+            background: rgba(255,255,255,0.05); border-radius: 40px; transform: rotate(45deg);
+        }
+
+        /* --- Global Components --- */
+        .btn-primary {
+            width: 100%; padding: 16px; border-radius: var(--radius-pill); border: none;
+            background: var(--primary-gradient); color: white; font-weight: 800; font-size: 16px;
+            cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-outline {
+            width: 100%; padding: 14px; border-radius: var(--radius-pill); border: 2px solid var(--primary-soft);
+            background: var(--surface-color); color: var(--primary); font-weight: 800; font-size: 15px;
+            cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--text-muted); }
+        .input-group input, .input-group select {
+            width: 100%; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border);
+            background: var(--surface-color); color: var(--text-main); outline: none; transition: 0.2s;
+            font-weight: 700;
+        }
+        .input-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+
+        /* --- Login Specific --- */
+        .login-input {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 2px solid rgba(255,255,255,0.4) !important;
+            border-radius: 0 !important;
+            color: white !important;
+            padding: 10px 5px !important;
+            font-size: 16px;
+        }
+        .login-input::placeholder { color: rgba(255,255,255,0.6); }
+        .login-input:focus { border-bottom-color: white !important; box-shadow: none !important; }
+        .btn-login {
+            width: 100%; padding: 16px; border-radius: var(--radius-pill); border: none;
+            background: white; color: var(--primary); font-weight: 800; font-size: 16px;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- Header --- */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 30px 24px 20px; position: relative; z-index: 1; color: white; }
+        .user-meta { display: flex; align-items: center; gap: 14px; }
+        .avatar { width: 50px; height: 50px; border-radius: 16px; background: rgba(255,255,255,0.2); color: white; display: flex; align-items: center; justify-content: center; font-size: 28px; backdrop-filter: blur(5px); }
+        .greeting h3 { font-size: 18px; font-weight: 800; }
+        .greeting p { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 600;}
+
+        /* --- Balance Card --- */
+        .card-main {
+            margin: 0 24px 24px; background: var(--surface-color);
+            border-radius: var(--radius-lg); padding: 24px; color: var(--text-main); 
+            box-shadow: var(--shadow-md); position: relative; z-index: 1;
+        }
+        .card-main .label { font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+        .card-main .balance { font-size: 34px; font-weight: 800; margin-bottom: 24px; color: var(--text-main); }
+        .card-stats { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px dashed var(--border); padding-top: 16px; }
+        .stat-box p { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-box h4 { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+
+        /* --- Summary Grid --- */
+        .grid-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 24px 20px; position: relative; z-index: 1; }
+        .box-summary { background: var(--surface-color); padding: 18px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+        .box-summary.highlight { background: var(--primary-gradient); color: white; }
+        .box-summary.highlight p { color: rgba(255,255,255,0.8); }
+        .box-summary p { font-size: 12px; font-weight: 800; color: var(--text-muted); margin-bottom: 6px; }
+        .box-summary h3 { font-size: 18px; font-weight: 800; }
+
+        /* --- Containers --- */
+        .list-container { background: var(--surface-color); margin: 0 24px 24px; padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); position: relative; z-index: 1; }
+        .list-header { font-size: 16px; font-weight: 800; margin-bottom: 20px; color: var(--text-main); }
+
+        /* --- Bottom Nav --- */
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%; max-width: 480px;
+            background: var(--surface-color); border-top: none;
+            display: flex; justify-content: space-around; padding: 15px 0 25px; z-index: 100;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.04);
+            border-top-left-radius: 30px; border-top-right-radius: 30px;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-muted); font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: var(--primary); transform: translateY(-4px); }
+        .nav-item i { font-size: 26px; }
+        
+        .fab {
+            width: 60px; height: 60px; background: var(--primary-gradient); color: white;
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; box-shadow: var(--shadow-md);
+            margin-top: -35px; border: 5px solid var(--bg-color); transition: 0.3s; transform: rotate(45deg);
+        }
+        .fab i { transform: rotate(-45deg); }
+        .fab:active { transform: rotate(45deg) scale(0.9); }
+
+        /* --- Modals --- */
+        .overlay { position: absolute; inset: 0; background: rgba(26, 20, 35, 0.6); z-index: 200; display: none; align-items: flex-end; backdrop-filter: blur(4px); }
+        .overlay.active { display: flex; }
+        .modal { 
+            background: var(--surface-color); width: 100%; padding: 30px 24px; 
+            border-radius: 30px 30px 0 0; 
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* Loader */
+        .loader-box { position: absolute; inset: 0; background: var(--bg-color); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- LOADER -->
+    <div id="loader" class="loader-box">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; font-size: 14px; color: var(--text-muted)" id="loader-msg">Memuat...</p>
+    </div>
+
+    <!-- NOTIFICATION BOX -->
+    <div id="notif-overlay" class="overlay" style="align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal" style="width: 85%; max-width: 320px; border-radius: 20px; text-align: center;">
+            <div id="notif-icon" style="font-size: 44px; color: var(--success); margin-bottom: 12px;"><i class="ph-fill ph-check-circle"></i></div>
+            <h3 id="notif-title" style="margin-bottom: 8px;">Info</h3>
+            <p id="notif-msg" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;"></p>
+            <button class="btn-primary" onclick="closeNotif()">Tutup</button>
+        </div>
+    </div>
+
+    <!-- VIEW: LOGIN -->
+<div id="view-login" class="view-section active">
+    <div style="height: 100vh; display: flex; align-items: center; padding: 24px; background: var(--primary-gradient); color: white;">
+        <div class="login-card" style="padding: 40px 24px; border-radius: var(--radius-lg); width: 100%; text-align: center;">
+            <div style="background: white; width: 85px; height: 85px; border-radius: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: rotate(10deg);">
+                <i class="ph-fill ph-wallet" style="font-size: 45px; color: var(--primary); transform: rotate(-10deg);"></i>
+            </div>
+            <h2 style="font-weight: 800; font-size: 32px; margin-bottom: 8px;">Welcome!</h2>
+            <p style="font-size: 15px; opacity: 0.9; margin-bottom: 50px;">Log in to your account</p>
+            
+            <div class="input-group" style="text-align: left;">
+                <input type="text" id="login-user" placeholder="Username" class="login-input">
+            </div>
+            <div class="input-group" style="text-align: left; margin-bottom: 40px;">
+                <input type="password" id="login-pass" placeholder="Password" class="login-input">
+            </div>
+            <button class="btn-login" onclick="doLogin()">Log In</button>
+            <p style="margin-top: 30px; font-size: 14px; opacity: 0.9;">Don't have an account? <span onclick="navTo('view-register')" style="font-weight: 800; cursor: pointer; text-decoration: underline;">Create</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW: REGISTER (NEW) -->
+<div id="view-register" class="view-section">
+    <div style="height: 100vh; display: flex; align-items: center; padding: 24px; background: var(--primary-gradient); color: white; position: relative;">
+        
+        <!-- Tombol Kembali -->
+        <button onclick="navTo('view-login')" style="position: absolute; top: 30px; left: 24px; background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(5px); box-shadow: var(--shadow-sm); z-index: 10;">
+            <i class="ph-bold ph-arrow-left" style="font-size: 24px;"></i>
+        </button>
+
+        <div class="login-card" style="padding: 40px 24px; border-radius: var(--radius-lg); width: 100%; text-align: center;">
+            <div style="background: white; width: 85px; height: 85px; border-radius: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: rotate(-10deg);">
+                <i class="ph-fill ph-user-plus" style="font-size: 45px; color: var(--primary); transform: rotate(10deg);"></i>
+            </div>
+            <h2 style="font-weight: 800; font-size: 32px; margin-bottom: 8px;">Create Account</h2>
+            <p style="font-size: 15px; opacity: 0.9; margin-bottom: 40px;">Bergabunglah bersama kami</p>
+            
+            <div class="input-group" style="text-align: left;">
+                <input type="text" id="reg-user" placeholder="Username" class="login-input">
+            </div>
+            <div class="input-group" style="text-align: left;">
+                <input type="password" id="reg-pass" placeholder="Password" class="login-input">
+            </div>
+            <div class="input-group" style="text-align: left; margin-bottom: 40px;">
+                <input type="password" id="reg-pass-confirm" placeholder="Confirm Password" class="login-input">
+            </div>
+            <button class="btn-login" onclick="doRegister()">Sign Up</button>
+            <p style="margin-top: 30px; font-size: 14px; opacity: 0.9;">Already have an account? <span onclick="navTo('view-login')" style="font-weight: 800; cursor: pointer; text-decoration: underline;">Log In</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW: DASHBOARD -->
+<div id="view-dashboard" class="view-section">
+    <div class="purple-header-bg"></div>
+    <header class="header">
+        <div class="user-meta">
+            <div class="avatar"><i class="ph-fill ph-smiley"></i></div>
+            <div class="greeting">
+                <p id="greet-txt">Selamat Datang,</p>
+                <h3 id="user-display">User</h3>
+            </div>
+        </div>
+        <button onclick="toggleTheme()" style="background:none; border:none; color:white; font-size: 26px; cursor: pointer;"><i class="ph-fill ph-moon" id="theme-icon"></i></button>
+    </header>
+
+    <div class="card-main">
+        <p class="label">Kekayaan Bersih</p>
+        <h1 class="balance" id="val-net">Rp 0</h1>
+        <div class="card-stats">
+            <div class="stat-box"><p>Pemasukan</p><h4 style="color: var(--success);"><i class="ph-bold ph-arrow-down-left"></i> <span id="val-total-in">0</span></h4></div>
+            <div class="stat-box" style="text-align: right;"><p>Pengeluaran</p><h4 style="justify-content: flex-end; color: var(--danger);"><span id="val-total-out">0</span> <i class="ph-bold ph-arrow-up-right"></i></h4></div>
+        </div>
+    </div>
+
+    <div class="grid-summary">
+        <div class="box-summary"><p>Hari Ini</p><h3 id="val-day-out" style="color: var(--danger);">Rp 0</h3></div>
+        <div class="box-summary highlight"><p>Estimasi Sisa</p><h3 id="val-budget">Rp 0</h3></div>
+    </div>
+
+    <div class="list-container">
+        <div class="list-header">Tren 7 Hari Terakhir</div>
+        <div style="height: 180px;"><canvas id="chartTrend"></canvas></div>
+    </div>
+
+    <div class="list-container">
+        <div class="list-header">Top Kategori (Bulan Ini)</div>
+        <div id="dist-list"></div>
+    </div>
+</div>
+
+<!-- VIEW: HISTORY -->
+<div id="view-history" class="view-section">
+    <div class="purple-header-bg" style="height: 140px;"></div>
+    <header class="header"><h3>Riwayat Transaksi</h3></header>
+    <div id="tx-history-list" style="padding: 0 24px; position: relative; z-index: 1;"></div>
+</div>
+
+<!-- VIEW: REPORT -->
+<div id="view-report" class="view-section">
+    <div class="purple-header-bg" style="height: 140px;"></div>
+    <header class="header"><h3>Laporan Keuangan</h3></header>
+    <div style="padding: 0 24px 16px; position: relative; z-index: 1;">
+        <input type="month" id="report-picker" onchange="fetchReport()" style="width:100%; padding: 14px; border-radius: var(--radius-md); border: none; background: var(--surface-color); color: var(--text-main); font-weight: 700; box-shadow: var(--shadow-sm);">
+    </div>
+    
+    <div class="grid-summary">
+        <div class="box-summary" style="border-left: 4px solid var(--success);"><p>Masuk</p><h3 id="rep-in" style="color: var(--success);">Rp 0</h3></div>
+        <div class="box-summary" style="border-left: 4px solid var(--danger);"><p>Keluar</p><h3 id="rep-out" style="color: var(--danger);">Rp 0</h3></div>
+    </div>
+
+    <div class="list-container">
+        <div class="list-header">Analisis Pengeluaran</div>
+        <div style="height: 280px; position: relative; margin-bottom: 20px;">
+            <canvas id="chartReport"></canvas>
+            <div id="no-report-data" style="position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px;">Tidak ada pengeluaran di bulan ini</div>
+        </div>
+        <!-- BUTTON DOWNLOAD -->
+        <button class="btn-outline" onclick="downloadReportCSV()" id="btn-download" style="margin-top: 10px;">
+            <i class="ph-bold ph-download-simple"></i> Unduh Data (.csv)
+        </button>
+    </div>
+</div>
+
+<!-- NAV BAR -->
+    <nav class="nav-bar" id="app-nav" style="display: none;">
+        <div class="nav-item active" onclick="navTo('view-dashboard', this)"><i class="ph ph-house"></i><span>Beranda</span></div>
+        <div class="nav-item" onclick="navTo('view-history', this)"><i class="ph ph-receipt"></i><span>Riwayat</span></div>
+        <div class="fab" onclick="toggleModal(true)"><i class="ph ph-plus"></i></div>
+        <div class="nav-item" onclick="navTo('view-report', this)"><i class="ph ph-chart-bar"></i><span>Laporan</span></div>
+        <div class="nav-item" onclick="doLogout()"><i class="ph ph-sign-out"></i><span>Keluar</span></div>
+    </nav>
+
+    <!-- MODAL: FORM TX -->
+    <div id="modal-tx" class="overlay">
+        <div class="modal">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h3 id="modal-title">Tambah Transaksi</h3>
+                <i class="ph ph-x" onclick="toggleModal(false)" style="font-size: 24px; cursor:pointer;"></i>
+            </div>
+            <form id="tx-form" onsubmit="saveTx(event)">
+                <div class="input-group"><label>Tanggal</label><input type="date" id="f-date" required></div>
+                <div class="input-group"><label>Tipe</label><select id="f-type" onchange="syncCats()"><option value="Keluar">Pengeluaran (-)</option><option value="Masuk">Pemasukan (+)</option></select></div>
+                <div class="input-group"><label>Nominal (Rp)</label><input type="number" id="f-amount" placeholder="50.000" required></div>
+                <div class="input-group"><label>Kategori</label><select id="f-cat" required></select></div>
+                <div class="input-group"><label>Catatan</label><input type="text" id="f-note" placeholder="Beli apa?"></div>
+                <button type="submit" class="btn-primary" id="btn-save">Simpan Transaksi</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzkZYsWPDSjOhpkXs4-yR1S4GJpnO_YY31sUhA87TyPDlabPxKwZG4hlvfppFDIW4f1OQ/exec";
+    
+    let state = {
+        user: localStorage.getItem('user_id') || null,
+        theme: localStorage.getItem('app_theme') || 'light',
+        cats: { masuk: [], keluar: [] },
+        charts: { trend: null, report: null },
+        reportData: null // Menyimpan data laporan untuk fitur download
+    };
+
+    const fmtRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+    const fmtShort = (v) => v >= 1000000 ? (v/1000000).toFixed(1) + 'jt' : (v >= 1000 ? (v/1000).toFixed(0) + 'rb' : v);
+
+    function showLoading(msg = "Memuat...") {
+        document.getElementById('loader-msg').innerText = msg;
+        document.getElementById('loader').style.display = 'flex';
+    }
+    function hideLoading() { document.getElementById('loader').style.display = 'none'; }
+
+    function notify(title, msg, type = 'success') {
+        document.getElementById('notif-title').innerText = title;
+        document.getElementById('notif-msg').innerText = msg;
+        document.getElementById('notif-icon').innerHTML = `<i class="ph-fill ph-${type==='success'?'check':'warning'}-circle"></i>`;
+        document.getElementById('notif-icon').style.color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+        document.getElementById('notif-overlay').classList.add('active');
+    }
+    function closeNotif() { document.getElementById('notif-overlay').classList.remove('active'); }
+
+    async function api(action, params = {}, method = 'GET') {
+        try {
+            if (method === 'GET') {
+                const q = new URLSearchParams({ action, ...params }).toString();
+                const res = await fetch(`${API_URL}?${q}`);
+                return await res.json();
+            } else {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action, ...params })
+                });
+                return { success: true };
+            }
+        } catch (e) {
+            console.warn("API Offline, menggunakan Mock Data");
+            return mockApi(action, params);
+        }
+    }
+
+    window.onload = () => {
+        applyTheme();
+        if (state.user) {
+            navTo('view-dashboard');
+            initApp(true);
+        }
+        document.getElementById('f-date').valueAsDate = new Date();
+        document.getElementById('report-picker').value = new Date().toISOString().substring(0, 7);
+    };
+
+    function applyTheme() {
+        document.body.setAttribute('data-theme', state.theme);
+        document.getElementById('theme-icon').className = state.theme === 'dark' ? 'ph ph-sun' : 'ph ph-moon';
+    }
+
+    function toggleTheme() {
+        state.theme = state.theme === 'light' ? 'dark' : 'light';
+        localStorage.setItem('app_theme', state.theme);
+        applyTheme();
+        if(state.charts.trend) initApp(false);
+    }
+
+    async function doLogin() {
+        const u = document.getElementById('login-user').value;
+        if(!u) return notify("Opps", "Username wajib diisi", "error");
+        showLoading("Autentikasi...");
+        localStorage.setItem('user_id', u);
+        state.user = u;
+        navTo('view-dashboard');
+        await initApp(true);
+    }
+
+    async function doRegister() {
+        const u = document.getElementById('reg-user').value;
+        const p = document.getElementById('reg-pass').value;
+        const p2 = document.getElementById('reg-pass-confirm').value;
+
+        if(!u || !p || !p2) return notify("Opps", "Semua kolom wajib diisi", "error");
+        if(p !== p2) return notify("Opps", "Password tidak cocok!", "error");
+        if(p.length < 6) return notify("Opps", "Password minimal 6 karakter", "error");
+
+        showLoading("Membuat akun...");
+        const data = { user: u, pass: p };
+        const res = await api('register', { data }, 'POST');
+        
+        hideLoading();
+        if (res.success) {
+            notify("Berhasil", "Akun dibuat! Silakan login.");
+            document.getElementById('login-user').value = u;
+            document.getElementById('login-pass').value = '';
+            navTo('view-login');
+        } else {
+            notify("Gagal", res.message || "Username sudah terdaftar.", "error");
+        }
+    }
+
+    function doLogout() {
+        localStorage.removeItem('user_id');
+        location.reload();
+    }
+
+    async function initApp(withLoading = false) {
+        document.getElementById('user-display').innerText = state.user;
+        if(withLoading) showLoading("Menyinkronkan...");
+        const [catRes, dataRes] = await Promise.all([api('getCategories'), api('getData', { user: state.user })]);
+        if(withLoading) hideLoading();
+        if(catRes.success) { state.cats = catRes.data; syncCats(); }
+        if(dataRes.success) renderDashboard(dataRes.data);
+    }
+
+    function navTo(viewId, el) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        if (el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+        // Sembunyikan bottom-nav jika di halaman login atau register
+        document.getElementById('app-nav').style.display = (viewId === 'view-login' || viewId === 'view-register') ? 'none' : 'flex';
+        if (viewId === 'view-report') fetchReport();
+    }
+
+    function renderDashboard(data) {
+        document.getElementById('val-net').innerText = fmtRp(data.saldoBersih);
+        document.getElementById('val-total-in').innerText = fmtShort(data.totalMasuk);
+        document.getElementById('val-total-out').innerText = fmtShort(data.totalKeluar);
+        document.getElementById('val-day-out').innerText = fmtRp(data.keluarHariIni);
+        document.getElementById('val-budget').innerText = fmtRp(data.saldoBersih * 0.4);
+        renderTrendChart(data.chartData.keluar, data.chartData.labels);
+        renderDistList(data.distribusiBulanIni);
+        renderHistory(data.riwayatTransaksi);
+    }
+
+    function renderTrendChart(dataPoints, labels) {
+        const ctx = document.getElementById('chartTrend').getContext('2d');
+        if (state.charts.trend) state.charts.trend.destroy();
+        state.charts.trend = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ data: dataPoints, borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: state.theme === 'dark' ? '#94A3B8' : '#64748B' } } } }
+        });
+    }
+
+    function renderDistList(dist) {
+        const container = document.getElementById('dist-list');
+        container.innerHTML = '';
+        const entries = Object.entries(dist).sort((a,b) => b[1] - a[1]);
+        if(entries.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">Belum ada pengeluaran</p>`; return; }
+        entries.slice(0, 4).forEach(([name, val]) => {
+            container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; border-radius:10px; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center;"><i class="ph ph-tag"></i></div><span style="font-size:14px; font-weight:500;">${name}</span></div><span style="font-weight:700;">${fmtRp(val)}</span></div>`;
+        });
+    }
+
+    function renderHistory(txs) {
+        const container = document.getElementById('tx-history-list');
+        container.innerHTML = '';
+        if(txs.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 14px; padding-top: 40px;">Riwayat kosong</p>`; return; }
+        txs.forEach(tx => {
+            const isIn = tx.tipe === 'Masuk';
+            container.innerHTML += `<div class="box-summary" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; align-items: center; gap: 12px;"><div style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: ${isIn ? 'var(--success-soft)' : 'var(--danger-soft)'}; color: ${isIn ? 'var(--success)' : 'var(--danger)'}"><i class="ph ${isIn ? 'ph-arrow-circle-down' : 'ph-shopping-cart'}"></i></div><div><div style="font-weight: 600; font-size: 14px;">${tx.kategori}</div><div style="font-size: 11px; color: var(--text-muted);">${tx.tanggal} ${tx.catatan ? '• '+tx.catatan : ''}</div></div></div><div style="font-weight: 700; color: ${isIn ? 'var(--success)' : 'var(--text-main)'}">${isIn ? '+' : '-'}${fmtRp(tx.jumlah)}</div></div>`;
+        });
+    }
+
+    async function fetchReport() {
+        const m = document.getElementById('report-picker').value;
+        showLoading("Menganalisa...");
+        const res = await api('getReportData', { month: m });
+        hideLoading();
+        if(res.success) {
+            state.reportData = res.data; // Simpan data ke state
+            document.getElementById('rep-in').innerText = fmtRp(res.data.totalMasuk);
+            document.getElementById('rep-out').innerText = fmtRp(res.data.totalKeluar);
+            renderReportChart(res.data.distribusi);
+            
+            // Tampilkan/sembunyikan tombol download berdasarkan ketersediaan data
+            document.getElementById('btn-download').style.display = (res.data.totalMasuk === 0 && res.data.totalKeluar === 0) ? 'none' : 'flex';
+        }
+    }
+
+    function renderReportChart(dist) {
+        const ctx = document.getElementById('chartReport').getContext('2d');
+        const empty = document.getElementById('no-report-data');
+        if (state.charts.report) state.charts.report.destroy();
+
+        const labels = Object.keys(dist);
+        const values = Object.values(dist);
+
+        if(labels.length === 0) {
+            empty.style.display = 'flex';
+            return;
+        }
+        empty.style.display = 'none';
+
+        state.charts.report = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
+                    borderRadius: 8,
+                    barThickness: 24,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 500 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => ` Total: ${fmtRp(context.raw)}`
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: false, grid: { display: false } },
+                    y: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: {
+                            color: state.theme === 'dark' ? '#F1F5F9' : '#0F172A',
+                            font: { size: 12, weight: '500' }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * FITUR BARU: Download Laporan dalam format CSV
+     */
+    function downloadReportCSV() {
+        if (!state.reportData || !state.reportData.transaksi || state.reportData.transaksi.length === 0) {
+            return notify("Opps", "Tidak ada rincian transaksi untuk diunduh.", "error");
+        }
+
+        const monthName = document.getElementById('report-picker').value;
+        const filename = `Laporan_Keuangan_${monthName}.csv`;
+        
+        // Header CSV
+        let csvContent = "Tanggal,Tipe,Kategori,Jumlah,Catatan\n";
+
+        // Baris Data
+        state.reportData.transaksi.forEach(tx => {
+            const row = [
+                tx.tanggal,
+                tx.tipe,
+                tx.kategori,
+                tx.jumlah,
+                `"${tx.catatan || ''}"` // Menggunakan tanda kutip untuk mengantisipasi koma dalam catatan
+            ].join(",");
+            csvContent += row + "\n";
+        });
+
+        // Proses download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        notify("Berhasil", "Laporan berhasil diunduh.");
+    }
+
+    function toggleModal(show) { document.getElementById('modal-tx').classList.toggle('active', show); if(!show) document.getElementById('tx-form').reset(); }
+
+    function syncCats() {
+        const type = document.getElementById('f-type').value;
+        const sel = document.getElementById('f-cat');
+        sel.innerHTML = '';
+        const list = type === 'Masuk' ? state.cats.masuk : state.cats.keluar;
+        if(list.length === 0) { sel.innerHTML = '<option disabled>Memuat...</option>'; return; }
+        list.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.innerText = c; sel.appendChild(opt); });
+    }
+
+    async function saveTx(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-save');
+        const data = { tanggal: document.getElementById('f-date').value, tipe: document.getElementById('f-type').value, jumlah: document.getElementById('f-amount').value, kategori: document.getElementById('f-cat').value, catatan: document.getElementById('f-note').value, user: state.user };
+        btn.disabled = true; btn.innerText = "Mengirim...";
+        showLoading("Menyimpan...");
+        const res = await api('addTransaction', { data }, 'POST');
+        if (res.success) {
+            toggleModal(false); btn.disabled = false; btn.innerText = "Simpan Data";
+            await initApp(false); 
+            hideLoading();
+            notify("Berhasil", "Transaksi disimpan ke database.");
+        } else {
+            hideLoading(); btn.disabled = false; btn.innerText = "Simpan Data";
+            notify("Gagal", "Koneksi bermasalah.", "error");
+        }
+    }
+
+    function mockApi(action, params) {
+        return new Promise(res => {
+            setTimeout(() => {
+                if(action === 'login') res({ success: true });
+                if(action === 'getCategories') res({ success: true, data: { masuk: ['Gaji', 'Bonus', 'Transfer'], keluar: ['Makan', 'Transport', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan'] } });
+                if(action === 'getData') res({ success: true, data: { saldoBersih: 4250000, totalMasuk: 6500000, totalKeluar: 2250000, keluarHariIni: 85000, distribusiBulanIni: { 'Makan': 1100000, 'Belanja': 650000, 'Transport': 300000, 'Hiburan': 200000 }, chartData: { labels: ['01/04', '02/04', '03/04', '04/04', '05/04', '06/04', '07/04'], keluar: [120, 80, 200, 45, 150, 90, 75] }, riwayatTransaksi: [{ tanggal: '2026-04-04', tipe: 'Keluar', jumlah: 85000, kategori: 'Makan', catatan: 'Nasi goreng' }, { tanggal: '2026-04-03', tipe: 'Masuk', jumlah: 6000000, kategori: 'Gaji' }] } });
+                if(action === 'getReportData') {
+                    res({ 
+                        success: true, 
+                        data: { 
+                            totalMasuk: 6000000, 
+                            totalKeluar: 2500000, 
+                            distribusi: { 'Makan': 1100000, 'Belanja': 800000, 'Transport': 400000, 'Hiburan': 200000 },
+                            transaksi: [
+                                { tanggal: '2026-04-04', tipe: 'Keluar', jumlah: 50000, kategori: 'Makan', catatan: 'Makan Siang' },
+                                { tanggal: '2026-04-02', tipe: 'Masuk', jumlah: 6000000, kategori: 'Gaji', catatan: 'Gaji April' }
+                            ]
+                        } 
+                    });
+                }
+                if(action === 'addTransaction') res({ success: true });
+                if(action === 'register') {
+                    // Simulasi mock API: tolak jika mendaftar dengan nama 'admin'
+                    const requestData = JSON.parse(params.data || '{}');
+                    if(requestData.user === 'admin') {
+                        res({ success: false, message: 'Username "admin" sudah terdaftar' });
+                    } else {
+                        res({ success: true });
+                    }
+                }
+            }, 400);
+        });
+    }
+</script>
+</body>
+</html>

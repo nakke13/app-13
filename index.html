@@ -69,9 +69,11 @@
         .view-section { display: none; padding-bottom: 90px; position: relative; min-height: 100vh;}
         .view-section.active { display: block; animation: slideIn 0.3s ease-out; }
 
-        @keyframes slideIn { 
-            from { opacity: 0; transform: translateY(15px); } 
-            to { opacity: 1; transform: translateY(0); } 
+        /* Mencegah scroll pada halaman Login dan Register */
+        #view-login, #view-register { 
+            padding-bottom: 0; 
+            height: 100vh; 
+            overflow: hidden; 
         }
 
         /* Purple Header Background for App Views */
@@ -375,14 +377,15 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzkZYsWPDSjOhpkXs4-yR1S4GJpnO_YY31sUhA87TyPDlabPxKwZG4hlvfppFDIW4f1OQ/exec";
+    // GANTI URL DI BAWAH INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA
+    const API_URL = "https://script.google.com/macros/s/AKfycbyCGmCoYYWTvaJVpSmq1NAmRjb1RIcVpWYRMeClLq2JVLVXoyid60kKqrTcFh0EFKIEbg/exec";
     
     let state = {
         user: localStorage.getItem('user_id') || null,
         theme: localStorage.getItem('app_theme') || 'light',
         cats: { masuk: [], keluar: [] },
         charts: { trend: null, report: null },
-        reportData: null // Menyimpan data laporan untuk fitur download
+        reportData: null
     };
 
     const fmtRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
@@ -403,23 +406,31 @@
     }
     function closeNotif() { document.getElementById('notif-overlay').classList.remove('active'); }
 
+    // KOMUNIKASI API (Sinkron Penuh dengan Google Apps Script)
     async function api(action, params = {}, method = 'GET') {
         try {
             if (method === 'GET') {
                 const q = new URLSearchParams({ action, ...params }).toString();
                 const res = await fetch(`${API_URL}?${q}`);
+                if (!res.ok) throw new Error("Network response was not ok");
                 return await res.json();
             } else {
-                await fetch(API_URL, {
+                // Konfigurasi POST aman agar bisa terbaca oleh Google Apps Script
+                const payload = { action: action, data: JSON.stringify(params.data || {}) };
+                const res = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action, ...params })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(payload)
                 });
-                return { success: true };
+                
+                try {
+                    return await res.json();
+                } catch(e) {
+                     return { success: true }; 
+                }
             }
         } catch (e) {
-            console.warn("API Offline, menggunakan Mock Data");
+            console.warn("Error API atau menggunakan Mock Data:", e);
             return mockApi(action, params);
         }
     }
@@ -446,16 +457,28 @@
         if(state.charts.trend) initApp(false);
     }
 
+    // LOGIN DENGAN VALIDASI DATABASE
     async function doLogin() {
         const u = document.getElementById('login-user').value;
-        if(!u) return notify("Opps", "Username wajib diisi", "error");
+        const p = document.getElementById('login-pass').value;
+
+        if(!u || !p) return notify("Opps", "Username dan Password wajib diisi", "error");
+        
         showLoading("Autentikasi...");
-        localStorage.setItem('user_id', u);
-        state.user = u;
-        navTo('view-dashboard');
-        await initApp(true);
+        const res = await api('login', { data: { user: u, pass: p } }, 'POST');
+        
+        if(res.success) {
+            localStorage.setItem('user_id', u);
+            state.user = u;
+            navTo('view-dashboard');
+            await initApp(true);
+        } else {
+            hideLoading();
+            notify("Gagal", res.message || "Username atau Password salah!", "error");
+        }
     }
 
+    // REGISTRASI USER
     async function doRegister() {
         const u = document.getElementById('reg-user').value;
         const p = document.getElementById('reg-pass').value;
@@ -501,7 +524,6 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
         }
-        // Sembunyikan bottom-nav jika di halaman login atau register
         document.getElementById('app-nav').style.display = (viewId === 'view-login' || viewId === 'view-register') ? 'none' : 'flex';
         if (viewId === 'view-report') fetchReport();
     }
@@ -550,15 +572,13 @@
     async function fetchReport() {
         const m = document.getElementById('report-picker').value;
         showLoading("Menganalisa...");
-        const res = await api('getReportData', { month: m });
+        const res = await api('getReportData', { month: m, user: state.user }); // <-- UPDATE: Mengirim user state untuk filter laporan
         hideLoading();
         if(res.success) {
-            state.reportData = res.data; // Simpan data ke state
+            state.reportData = res.data;
             document.getElementById('rep-in').innerText = fmtRp(res.data.totalMasuk);
             document.getElementById('rep-out').innerText = fmtRp(res.data.totalKeluar);
             renderReportChart(res.data.distribusi);
-            
-            // Tampilkan/sembunyikan tombol download berdasarkan ketersediaan data
             document.getElementById('btn-download').style.display = (res.data.totalMasuk === 0 && res.data.totalKeluar === 0) ? 'none' : 'flex';
         }
     }
@@ -616,9 +636,6 @@
         });
     }
 
-    /**
-     * FITUR BARU: Download Laporan dalam format CSV
-     */
     function downloadReportCSV() {
         if (!state.reportData || !state.reportData.transaksi || state.reportData.transaksi.length === 0) {
             return notify("Opps", "Tidak ada rincian transaksi untuk diunduh.", "error");
@@ -626,23 +643,15 @@
 
         const monthName = document.getElementById('report-picker').value;
         const filename = `Laporan_Keuangan_${monthName}.csv`;
-        
-        // Header CSV
         let csvContent = "Tanggal,Tipe,Kategori,Jumlah,Catatan\n";
 
-        // Baris Data
         state.reportData.transaksi.forEach(tx => {
             const row = [
-                tx.tanggal,
-                tx.tipe,
-                tx.kategori,
-                tx.jumlah,
-                `"${tx.catatan || ''}"` // Menggunakan tanda kutip untuk mengantisipasi koma dalam catatan
+                tx.tanggal, tx.tipe, tx.kategori, tx.jumlah, `"${tx.catatan || ''}"`
             ].join(",");
             csvContent += row + "\n";
         });
 
-        // Proses download
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
@@ -685,18 +694,25 @@
         }
     }
 
+    // FUNGSI MOCK API DIPERBARUI UNTUK SIMULASI LOGIN
     function mockApi(action, params) {
         return new Promise(res => {
             setTimeout(() => {
-                if(action === 'login') res({ success: true });
+                if(action === 'login') {
+                    const req = JSON.parse(params.data || '{}');
+                    if(req.user === 'admin' && req.pass === 'admin123') {
+                        res({ success: true });
+                    } else {
+                        res({ success: false, message: 'Simulasi Offline: Coba admin & admin123' });
+                    }
+                }
                 if(action === 'getCategories') res({ success: true, data: { masuk: ['Gaji', 'Bonus', 'Transfer'], keluar: ['Makan', 'Transport', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan'] } });
                 if(action === 'getData') res({ success: true, data: { saldoBersih: 4250000, totalMasuk: 6500000, totalKeluar: 2250000, keluarHariIni: 85000, distribusiBulanIni: { 'Makan': 1100000, 'Belanja': 650000, 'Transport': 300000, 'Hiburan': 200000 }, chartData: { labels: ['01/04', '02/04', '03/04', '04/04', '05/04', '06/04', '07/04'], keluar: [120, 80, 200, 45, 150, 90, 75] }, riwayatTransaksi: [{ tanggal: '2026-04-04', tipe: 'Keluar', jumlah: 85000, kategori: 'Makan', catatan: 'Nasi goreng' }, { tanggal: '2026-04-03', tipe: 'Masuk', jumlah: 6000000, kategori: 'Gaji' }] } });
                 if(action === 'getReportData') {
                     res({ 
                         success: true, 
                         data: { 
-                            totalMasuk: 6000000, 
-                            totalKeluar: 2500000, 
+                            totalMasuk: 6000000, totalKeluar: 2500000, 
                             distribusi: { 'Makan': 1100000, 'Belanja': 800000, 'Transport': 400000, 'Hiburan': 200000 },
                             transaksi: [
                                 { tanggal: '2026-04-04', tipe: 'Keluar', jumlah: 50000, kategori: 'Makan', catatan: 'Makan Siang' },
@@ -707,13 +723,9 @@
                 }
                 if(action === 'addTransaction') res({ success: true });
                 if(action === 'register') {
-                    // Simulasi mock API: tolak jika mendaftar dengan nama 'admin'
                     const requestData = JSON.parse(params.data || '{}');
-                    if(requestData.user === 'admin') {
-                        res({ success: false, message: 'Username "admin" sudah terdaftar' });
-                    } else {
-                        res({ success: true });
-                    }
+                    if(requestData.user === 'admin') res({ success: false, message: 'Username "admin" sudah terdaftar' });
+                    else res({ success: true });
                 }
             }, 400);
         });

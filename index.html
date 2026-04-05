@@ -272,8 +272,18 @@
     </div>
 
     <div id="view-history" class="view-section">
-        <div class="purple-header-bg" style="height: 140px;"></div>
-        <header class="header"><h3>Riwayat Transaksi</h3></header>
+        <div class="purple-header-bg" style="height: 180px;"></div>
+        <header class="header"><h3>Riwayat Harian</h3></header>
+        
+        <div style="padding: 0 24px 16px; position: relative; z-index: 1;">
+            <input type="date" id="history-date-picker" onchange="fetchHistoryByDate()" style="width:100%; padding: 14px; border-radius: var(--radius-md); border: none; background: var(--surface-color); color: var(--text-main); font-weight: 700; box-shadow: var(--shadow-sm);">
+        </div>
+
+        <div class="grid-summary" style="margin-top: -5px; padding-bottom: 10px;">
+            <div class="box-summary" style="border-left: 4px solid var(--success); padding: 12px;"><p>Masuk Harian</p><h3 id="hist-in" style="color: var(--success); font-size: 15px;">Rp 0</h3></div>
+            <div class="box-summary" style="border-left: 4px solid var(--danger); padding: 12px;"><p>Keluar Harian</p><h3 id="hist-out" style="color: var(--danger); font-size: 15px;">Rp 0</h3></div>
+        </div>
+
         <div id="tx-history-list" style="padding: 0 24px; position: relative; z-index: 1;"></div>
     </div>
 
@@ -289,12 +299,18 @@
             <div class="box-summary" style="border-left: 4px solid var(--danger);"><p>Keluar</p><h3 id="rep-out" style="color: var(--danger);">Rp 0</h3></div>
         </div>
 
+        <div class="box-summary" style="margin: 0 24px 16px; position: relative; z-index: 1; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center;">
+            <p style="margin-bottom: 0;">Sisa Bulan Ini</p>
+            <h3 id="rep-net" style="color: var(--primary);">Rp 0</h3>
+        </div>
+
         <div class="list-container">
             <div class="list-header">Analisis Pengeluaran</div>
-            <div style="height: 280px; position: relative; margin-bottom: 20px;">
+            <div style="height: 220px; position: relative; margin-bottom: 10px;">
                 <canvas id="chartReport"></canvas>
                 <div id="no-report-data" style="position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px; font-weight: 700;">Tidak ada pengeluaran di bulan ini</div>
             </div>
+            <div id="rep-highest-cat" style="text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--text-muted); font-size: 13px;"></div>
             <button class="btn-outline" onclick="downloadReportCSV()" id="btn-download" style="margin-top: 10px;">
                 <i class="ph-bold ph-download-simple"></i> Unduh Data (.csv)
             </button>
@@ -320,7 +336,7 @@
                 <div class="input-group"><label>Tipe</label><select id="f-type" onchange="syncCats()"><option value="Keluar">Pengeluaran (-)</option><option value="Masuk">Pemasukan (+)</option></select></div>
                 
                 <div class="input-group"><label>Sumber Dana</label><select id="f-sumber" onchange="toggleBank()"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option></select></div>
-                <div class="input-group" id="f-bank-group" style="display: none;"><label>Nama Bank</label><select id="f-bank"><option value="BCA">BCA</option><option value="Mandiri">Mandiri</option><option value="BNI">BNI</option><option value="BRI">BRI</option><option value="CIMB Niaga">CIMB Niaga</option><option value="BSI">BSI</option><option value="Lainnya">Lainnya</option></select></div>
+                <div class="input-group" id="f-bank-group" style="display: none;"><label>Nama Bank</label><input type="text" id="f-bank" placeholder="Contoh: BCA, Mandiri, dsb."></div>
                 
                 <div class="input-group"><label>Nominal (Rp)</label><input type="text" inputmode="numeric" id="f-amount" placeholder="Contoh: 300.000" onkeyup="formatRibuan(this)" required></div>
                 <div class="input-group"><label>Kategori</label><select id="f-cat" required></select></div>
@@ -397,6 +413,7 @@
         }
         document.getElementById('f-date').valueAsDate = new Date();
         document.getElementById('report-picker').value = new Date().toISOString().substring(0, 7);
+        document.getElementById('history-date-picker').valueAsDate = new Date();
     };
 
     function applyTheme() {
@@ -455,6 +472,7 @@
         }
         document.getElementById('app-nav').style.display = (viewId === 'view-login') ? 'none' : 'flex';
         if (viewId === 'view-report') fetchReport();
+        if (viewId === 'view-history') fetchHistoryByDate();
     }
 
     function renderDashboard(data) {
@@ -491,11 +509,40 @@
     function renderHistory(txs) {
         const container = document.getElementById('tx-history-list');
         container.innerHTML = '';
-        if(txs.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 14px; font-weight: 600; padding-top: 40px;">Sejarah transaksi kosong</p>`; return; }
+        if(txs.length === 0) { container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 14px; font-weight: 600; padding-top: 40px;">Tiada transaksi pada tarikh ini</p>`; return; }
         txs.forEach(tx => {
             const isIn = tx.tipe === 'Masuk';
             container.innerHTML += `<div class="box-summary" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; align-items: center; gap: 14px;"><div style="width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; background: ${isIn ? 'var(--success-soft)' : 'var(--danger-soft)'}; color: ${isIn ? 'var(--success)' : 'var(--danger)'}"><i class="ph-bold ${isIn ? 'ph-arrow-down-left' : 'ph-shopping-cart'}"></i></div><div><div style="font-weight: 800; font-size: 15px;">${tx.kategori}</div><div style="font-size: 12px; font-weight: 600; color: var(--text-muted);">${tx.tanggal} ${tx.catatan ? '• '+tx.catatan : ''}</div></div></div><div style="font-weight: 800; color: ${isIn ? 'var(--success)' : 'var(--text-main)'}">${isIn ? '+' : '-'}${fmtRp(tx.jumlah)}</div></div>`;
         });
+    }
+
+    async function fetchHistoryByDate() {
+        const selectedDate = document.getElementById('history-date-picker').value;
+        if (!selectedDate) return;
+
+        const monthStr = selectedDate.substring(0, 7); 
+        
+        showLoading("Mencari rekod harian...");
+        const res = await api('getReportData', { month: monthStr, user: state.user }); 
+        hideLoading();
+
+        if(res.success) {
+            const allTx = res.data.transaksi || [];
+            const filteredTx = allTx.filter(tx => tx.tanggal === selectedDate);
+            
+            let totalIn = 0;
+            let totalOut = 0;
+
+            filteredTx.forEach(tx => {
+                if (tx.tipe === 'Masuk') totalIn += tx.jumlah;
+                else totalOut += tx.jumlah;
+            });
+
+            document.getElementById('hist-in').innerText = fmtRp(totalIn);
+            document.getElementById('hist-out').innerText = fmtRp(totalOut);
+
+            renderHistory(filteredTx);
+        }
     }
 
     async function fetchReport() {
@@ -507,6 +554,11 @@
             state.reportData = res.data;
             document.getElementById('rep-in').innerText = fmtRp(res.data.totalMasuk);
             document.getElementById('rep-out').innerText = fmtRp(res.data.totalKeluar);
+            
+            const netBalance = res.data.totalMasuk - res.data.totalKeluar;
+            document.getElementById('rep-net').innerText = fmtRp(netBalance);
+            document.getElementById('rep-net').style.color = netBalance < 0 ? 'var(--danger)' : 'var(--primary)';
+
             renderReportChart(res.data.distribusi);
             document.getElementById('btn-download').style.display = (res.data.totalMasuk === 0 && res.data.totalKeluar === 0) ? 'none' : 'flex';
         }
@@ -515,6 +567,7 @@
     function renderReportChart(dist) {
         const ctx = document.getElementById('chartReport').getContext('2d');
         const empty = document.getElementById('no-report-data');
+        const highestCat = document.getElementById('rep-highest-cat');
         if (state.charts.report) state.charts.report.destroy();
 
         const labels = Object.keys(dist);
@@ -522,28 +575,35 @@
 
         if(labels.length === 0) {
             empty.style.display = 'flex';
+            highestCat.innerText = '';
             return;
         }
         empty.style.display = 'none';
 
+        let maxVal = Math.max(...values);
+        let maxCat = labels[values.indexOf(maxVal)];
+        highestCat.innerHTML = `Pengeluaran Terbesar: <span style="color: var(--danger);">${maxCat} (${fmtRp(maxVal)})</span>`;
+
         state.charts.report = new Chart(ctx, {
-            type: 'bar',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
                     data: values,
                     backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
-                    borderRadius: 8,
-                    barThickness: 24,
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '70%',
                 animation: { duration: 500 },
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => ` Jumlah: ${fmtRp(context.raw)}` } } },
-                scales: { x: { display: false, grid: { display: false } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: state.theme === 'dark' ? '#F8FAFC' : '#334155', font: { size: 12, weight: '700' } } } }
+                plugins: { 
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Nunito', weight: 'bold' } } }, 
+                    tooltip: { callbacks: { label: (context) => ` ${context.label}: ${fmtRp(context.raw)}` } } 
+                }
             }
         });
     }
@@ -604,10 +664,10 @@
         const cleanAmount = document.getElementById('f-amount').value.replace(/\D/g, '');
         
         const sumber = document.getElementById('f-sumber').value;
-        const bank = document.getElementById('f-bank').value;
-        const originalNote = document.getElementById('f-note').value;
+        const bank = document.getElementById('f-bank').value.trim();
+        const originalNote = document.getElementById('f-note').value.trim();
         
-        let sumberInfo = sumber === 'Transfer' ? `[Transfer ${bank}]` : `[Tunai]`;
+        let sumberInfo = sumber === 'Transfer' ? (bank ? `[Transfer ${bank}]` : `[Transfer]`) : `[Tunai]`;
         let finalNote = originalNote ? `${sumberInfo} ${originalNote}` : sumberInfo;
 
         const data = { tanggal: document.getElementById('f-date').value, tipe: document.getElementById('f-type').value, jumlah: cleanAmount, kategori: document.getElementById('f-cat').value, catatan: finalNote, user: state.user };
